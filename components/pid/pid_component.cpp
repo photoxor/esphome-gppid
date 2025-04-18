@@ -1,0 +1,87 @@
+#include "pid_component.h"
+
+#include "esphome/core/log.h"
+
+namespace esphome {
+namespace pid {
+
+static const char *const TAG = "pid";
+
+void PIDComponent::setup() {
+    this->value_sensor_->add_on_state_callback([this](float state) {
+        ESP_LOGD(TAG, "sensor callback");
+        this->current_value_ = state;
+        this->update_pid_();
+    });
+    if (this->target_sensor_ != nullptr) {
+        this->target_sensor_->add_on_state_callback([this](float state) {
+            ESP_LOGD(TAG, "target callback");
+            this->target_value_ = state;
+        });
+    }
+#ifdef USE_NUMBER
+    if (this->target_number_ != nullptr) {
+        this->target_number_->add_on_state_callback([this](float state) {
+            ESP_LOGD(TAG, "number callback");
+            this->target_value_ = state;
+        });
+    }
+#endif
+    this->current_value_ = this->value_sensor_->state;
+}
+
+void PIDComponent::dump_config() {
+    ESP_LOGCONFIG(TAG, "PID Controller", this);
+    ESP_LOGCONFIG(TAG, "  Control Parameters:");
+    ESP_LOGCONFIG(TAG, "    kp: %.5f, ki: %.5f, kd: %.5f, output samples: %d",
+                  controller_.kp_, controller_.ki_, controller_.kd_,
+                  controller_.output_samples_);
+
+    if (controller_.threshold_low_ == 0 && controller_.threshold_high_ == 0) {
+        ESP_LOGCONFIG(TAG, "  Deadband disabled.");
+    } else {
+        ESP_LOGCONFIG(TAG, "  Deadband Parameters:");
+        ESP_LOGCONFIG(
+            TAG,
+            "    threshold: %0.5f to %0.5f, multipliers(kp: %.5f, ki: "
+            "%.5f, kd: %.5f), output samples: %d",
+            controller_.threshold_low_, controller_.threshold_high_,
+            controller_.kp_multiplier_, controller_.ki_multiplier_,
+            controller_.kd_multiplier_, controller_.deadband_output_samples_);
+    }
+}
+
+void PIDComponent::write_output_(float value) {
+#ifdef USE_OUTPUT
+    this->output_value_ = clamp(value, this->output_min_, this->output_max_);
+    this->output_->set_level(value);
+#endif
+
+    this->pid_computed_callback_.call();
+}
+
+void PIDComponent::update_pid_() {
+
+    float value;
+    if (std::isnan(this->current_value_) ||
+        std::isnan(this->target_value_)) {
+            ESP_LOGD(TAG, "nan");
+            // if any control parameters are nan, turn off all outputs
+        value = 0.0;
+    } else {
+        // Update PID controller irrespective of current mode, to not mess up
+        // D/I terms In non-auto mode, we just discard the output value
+        ESP_LOGD(TAG, "update_pid");
+        value = this->controller_.update(this->target_value_,
+                                         this->current_value_);
+    }
+
+    this->write_output_(value);
+}
+
+void PIDComponent::reset_integral_term() {
+    this->controller_.reset_accumulated_integral();
+}
+
+}  // namespace pid
+}  // namespace esphome

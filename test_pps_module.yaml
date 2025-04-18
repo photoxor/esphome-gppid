@@ -1,0 +1,143 @@
+external_components:
+  - source:
+      type: local
+      path: components
+  - source: github://hsteinhaus/esphome-m5stack-pps-module@master
+
+esphome:
+  name: gppid-test
+  friendly_name: "Alternator regulator"
+  project:
+    name: "hsteinhaus.alternator_regulator"
+    version: "0.1"
+
+esp32:
+  board: m5stack-core-esp32
+  framework:
+    type: arduino
+#  framework:
+#    type: esp-idf
+
+debug:
+  update_interval: 5s
+
+web_server:
+  port: 80
+  ota: true
+  local: true
+  version: 3
+
+# Enable logging
+logger:
+  level: DEBUG
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_password
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  reboot_timeout: 0s
+  domain: .devices.home
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+
+##############################################################################
+
+number:
+  - platform: template
+    id: v_target_num
+    name: "Target voltage"
+    unit_of_measurement: V
+    step: 0.1
+    min_value: 0
+    max_value: 20
+    optimistic: True
+
+sensor:
+  - platform: adc
+    pin: GPIO35
+    id: v_alt
+    name: "Alternator voltage"
+    accuracy_decimals: 1
+    unit_of_measurement: V
+    attenuation: 6dB
+    samples: 2
+    update_interval: 0.1s
+    filters:
+      - multiply: 22.9  # voltage divider 1k/23k
+
+  - platform: template
+    id: v_target_sensor
+    unit_of_measurement: V
+    accuracy_decimals: 1
+
+  - platform: pid
+    pid_id: field_pid
+    id: i_field
+    name: "Field current"
+    unit_of_measurement: A
+    accuracy_decimals: 1
+    type: RESULT
+
+  - platform: pid
+    pid_id: cascaded_pid
+    name: "Something weird"
+    unit_of_measurement: A
+    accuracy_decimals: 1
+    type: RESULT
+
+output:
+  - platform: template
+    id: i_field_out
+    type: float
+    write_action: {}
+
+  - platform: template
+    id: cascaded_out
+    type: float
+    write_action: {}
+
+pid:
+    - id: field_pid
+      current_value: v_alt
+      target_number: v_target_num
+      #target_sensor: v_target_sensor
+      output:
+        id: i_field_out
+        min: 0.
+        max: 5.
+      control_parameters:
+        kp: 0.5
+        ki: 0.005
+        kd: 5
+        output_averaging_samples: 5      # smooth the output over 5 samples
+        derivative_averaging_samples: 5  # smooth the derivative value over 10 samples
+      deadband_parameters:
+        threshold_high: 0.5
+        threshold_low: -0.5
+
+    - id: cascaded_pid
+      current_value: i_field
+      target_number: v_target_num
+      #target_sensor: v_target_sensor
+      output:
+        id: cascaded_out
+        min: 0.
+        max: 5.
+      control_parameters:
+        kp: 0.5
+        ki: 0.005
+        kd: 10
+        output_averaging_samples: 5      # smooth the output over 5 samples
+        derivative_averaging_samples: 5  # smooth the derivative value over 10 samples
+      deadband_parameters:
+        threshold_high: 0.5
+        threshold_low: -0.5
+
+

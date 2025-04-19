@@ -8,10 +8,9 @@ namespace pid {
 static const char *const TAG = "pid";
 
 void PIDComponent::setup() {
-    this->value_sensor_->add_on_state_callback([this](float state) {
+    this->input_sensor_->add_on_state_callback([this](float state) {
         ESP_LOGD(TAG, "sensor callback - got value %f", state);
-        this->current_value_ = state;
-        this->update_pid_();
+        this->update_pid_(state);
     });
     if (this->target_sensor_ != nullptr) {
         this->target_sensor_->add_on_state_callback([this](float state) {
@@ -27,7 +26,6 @@ void PIDComponent::setup() {
         });
     }
 #endif
-    this->current_value_ = this->value_sensor_->state;
 }
 
 void PIDComponent::dump_config() {
@@ -62,22 +60,9 @@ void PIDComponent::write_output_(float value) {
     this->pid_computed_callback_.call();
 }
 
-void PIDComponent::update_pid_() {
-
-    float value;
-    if (std::isnan(this->current_value_) ||
-        std::isnan(this->target_value_)) {
-            ESP_LOGD(TAG, "nan");
-            // if any control parameters are nan, turn off all outputs
-        value = 0.0;
-    } else {
-        // Update PID controller irrespective of current mode, to not mess up
-        // D/I terms In non-auto mode, we just discard the output value
-        ESP_LOGD(TAG, "update_pid");
-        value = this->controller_.update(this->target_value_,
-                                         this->current_value_);
-    }
-
+void PIDComponent::update_pid_(float current_value) {
+    ESP_LOGD(TAG, "update_pid");
+    float value = this->controller_.update(this->target_value_, current_value);
     this->write_output_(value);
 }
 

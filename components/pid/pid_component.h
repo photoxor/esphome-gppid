@@ -21,13 +21,13 @@ class PIDComponent : public Component {
 #ifdef USE_NUMBER
   SUB_NUMBER(target);
 #endif
+SUB_SENSOR(target);
+SUB_SENSOR(input);
 
 public:
   PIDComponent() = default;
   void setup() override;
   void dump_config() override;
-
-  void set_value_sensor(sensor::Sensor *sensor) { value_sensor_ = sensor; }
 
   void set_kp(float kp) { controller_.kp_ = kp; }
   void set_ki(float ki) { controller_.ki_ = ki; }
@@ -85,12 +85,9 @@ public:
 
  protected:
 
-  void update_pid_();
+  void update_pid_(float current_value);
   void write_output_(float value);
 
-  /// The sensor used for getting the current value
-  sensor::Sensor *value_sensor_;
-  sensor::Sensor *target_sensor_{nullptr};
 
   #ifdef USE_OUTPUT
   output::FloatOutput *output_{nullptr};
@@ -104,7 +101,6 @@ public:
   float output_value_;
   CallbackManager<void()> pid_computed_callback_;
 
-  float current_value_{NAN};
   float target_value_{NAN};
 };
 

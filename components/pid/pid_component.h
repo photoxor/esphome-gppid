@@ -18,16 +18,17 @@ namespace esphome {
 namespace pid {
 
 class PIDComponent : public Component {
- public:
+#ifdef USE_NUMBER
+  SUB_NUMBER(target);
+#endif
+
+public:
   PIDComponent() = default;
   void setup() override;
   void dump_config() override;
 
   void set_value_sensor(sensor::Sensor *sensor) { value_sensor_ = sensor; }
-  void set_target_sensor(sensor::Sensor *sensor) { target_sensor_ = sensor; }
-#ifdef USE_NUMBER
-  void set_target_number(number::Number *number) { target_number_ = number; }
-#endif
+
   void set_kp(float kp) { controller_.kp_ = kp; }
   void set_ki(float ki) { controller_.ki_ = ki; }
   void set_kd(float kd) { controller_.kd_ = kd; }
@@ -42,6 +43,7 @@ class PIDComponent : public Component {
   void set_ki_multiplier(float in) { controller_.ki_multiplier_ = in; }
   void set_kd_multiplier(float in) { controller_.kd_multiplier_ = in; }
   void set_starting_integral_term(float in) { controller_.set_starting_integral_term(in); }
+
 
   void set_deadband_output_samples(int in) { controller_.deadband_output_samples_ = in; }
 
@@ -89,13 +91,11 @@ class PIDComponent : public Component {
   /// The sensor used for getting the current value
   sensor::Sensor *value_sensor_;
   sensor::Sensor *target_sensor_{nullptr};
-  #ifdef USE_NUMBER
-  number::Number *target_number_{nullptr};
-  #endif
 
   #ifdef USE_OUTPUT
   output::FloatOutput *output_{nullptr};
-  float output_min_, output_max_;
+  float output_min_;
+  float output_max_;
   #endif
 
 

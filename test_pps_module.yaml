@@ -59,6 +59,28 @@ number:
     max_value: 20
     optimistic: True
 
+  - platform: template
+    id: kp_num
+    name: "kP"
+    step: 0.001
+    min_value: 0
+    max_value: 1
+    optimistic: True
+  - platform: template
+    id: ki_num
+    name: "kI"
+    step: 0.001
+    min_value: 0
+    max_value: 1
+    optimistic: True
+  - platform: template
+    id: kd_num
+    name: "kD"
+    step: 0.001
+    min_value: 0
+    max_value: 1
+    optimistic: True
+
 sensor:
   - platform: adc
     pin: GPIO35
@@ -68,7 +90,7 @@ sensor:
     unit_of_measurement: V
     attenuation: 6dB
     samples: 2
-    update_interval: 0.1s
+    update_interval: 3.0s
     filters:
       - multiply: 22.9  # voltage divider 1k/23k
 
@@ -85,12 +107,12 @@ sensor:
     accuracy_decimals: 1
     type: RESULT
 
-  - platform: pid
-    pid_id: cascaded_pid
-    name: "Something weird"
-    unit_of_measurement: A
-    accuracy_decimals: 1
-    type: RESULT
+  # - platform: pid
+  #   pid_id: cascaded_pid
+  #   name: "Something weird"
+  #   unit_of_measurement: A
+  #   accuracy_decimals: 1
+  #   type: RESULT
 
 output:
   - platform: template
@@ -116,28 +138,31 @@ pid:
         kp: 0.5
         ki: 0.005
         kd: 5
-        output_averaging_samples: 5      # smooth the output over 5 samples
-        derivative_averaging_samples: 5  # smooth the derivative value over 10 samples
+        kp_num: kp_num
+        ki_num: ki_num
+        kd_num: kd_num
+        #output_averaging_samples: 5      # smooth the output over 5 samples
+        #derivative_averaging_samples: 5  # smooth the derivative value over 10 samples
       deadband_parameters:
         threshold_high: 0.5
         threshold_low: -0.5
 
-    - id: cascaded_pid
-      current_value: i_field
-      target_number: v_target_num
-      #target_sensor: v_target_sensor
-      output:
-        id: cascaded_out
-        min: 0.
-        max: 5.
-      control_parameters:
-        kp: 0.5
-        ki: 0.005
-        kd: 10
-        output_averaging_samples: 5      # smooth the output over 5 samples
-        derivative_averaging_samples: 5  # smooth the derivative value over 10 samples
-      deadband_parameters:
-        threshold_high: 0.5
-        threshold_low: -0.5
+    # - id: cascaded_pid
+    #   current_value: i_field
+    #   target_number: v_target_num
+    #   #target_sensor: v_target_sensor
+    #   output:
+    #     id: cascaded_out
+    #     min: 0.
+    #     max: 5.
+    #   control_parameters:
+    #     kp: 0.5
+    #     ki: 0.005
+    #     kd: 10
+    #     output_averaging_samples: 5      # smooth the output over 5 samples
+    #     derivative_averaging_samples: 5  # smooth the derivative value over 10 samples
+    #   deadband_parameters:
+    #     threshold_high: 0.5
+    #     threshold_low: -0.5
 
 

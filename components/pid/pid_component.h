@@ -20,6 +20,10 @@ namespace pid {
 class PIDComponent : public Component {
 #ifdef USE_NUMBER
   SUB_NUMBER(target);
+
+  SUB_NUMBER(kp);
+  SUB_NUMBER(ki);
+  SUB_NUMBER(kd);
 #endif
 SUB_SENSOR(target);
 SUB_SENSOR(input);
@@ -86,7 +90,6 @@ public:
  protected:
 
   void update_pid_(float current_value);
-  void write_output_(float value);
 
 
   #ifdef USE_OUTPUT
@@ -98,9 +101,9 @@ public:
 
   PIDController controller_;
   /// Output value as reported by the PID controller, for PIDComponentSensor
-  float output_value_;
   CallbackManager<void()> pid_computed_callback_;
 
+  float output_value_{0.};
   float target_value_{NAN};
 };
 

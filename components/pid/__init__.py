@@ -25,6 +25,9 @@ CONF_KP = "kp"
 CONF_KI = "ki"
 CONF_STARTING_INTEGRAL_TERM = "starting_integral_term"
 CONF_KD = "kd"
+CONF_KP_NUM = "kp_num"
+CONF_KI_NUM = "ki_num"
+CONF_KD_NUM = "kd_num"
 CONF_CONTROL_PARAMETERS = "control_parameters"
 CONF_NOISEBAND = "noiseband"
 CONF_POSITIVE_OUTPUT = "positive_output"
@@ -66,8 +69,8 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(): cv.declare_id(PIDComponent),
             cv.Required(CONF_CURRENT_VALUE): cv.use_id(sensor.Sensor),
-            cv.Optional(CONF_TARGET_SENSOR): cv.use_id(sensor.Sensor) ,
-            cv.Optional(CONF_TARGET_NUMBER): cv.use_id(number.Number) ,
+            cv.Optional(CONF_TARGET_SENSOR): cv.use_id(sensor.Sensor),
+            cv.Optional(CONF_TARGET_NUMBER): cv.use_id(number.Number),
             cv.Optional(CONF_HUMIDITY_SENSOR): cv.use_id(sensor.Sensor),
             cv.Required(CONF_OUTPUT_PARAMETERS): cv.Schema(
                 {
@@ -93,6 +96,9 @@ CONFIG_SCHEMA = cv.All(
                     cv.Required(CONF_KP): cv.float_,
                     cv.Optional(CONF_KI, default=0.0): cv.float_,
                     cv.Optional(CONF_KD, default=0.0): cv.float_,
+                    cv.Optional(CONF_KP_NUM): cv.use_id(number.Number),
+                    cv.Optional(CONF_KI_NUM): cv.use_id(number.Number),
+                    cv.Optional(CONF_KD_NUM): cv.use_id(number.Number),
                     cv.Optional(CONF_STARTING_INTEGRAL_TERM, default=0.0): cv.float_,
                     cv.Optional(CONF_MIN_INTEGRAL, default=-1): cv.float_,
                     cv.Optional(CONF_MAX_INTEGRAL, default=1): cv.float_,
@@ -112,7 +118,7 @@ async def to_code(config):
     await cg.register_component(var, config)
 
     sens = await cg.get_variable(config[CONF_CURRENT_VALUE])
-    cg.add(var.set_value_sensor(sens))
+    cg.add(var.set_input_sensor(sens))
 
     if CONF_TARGET_SENSOR in config:
         sens = await cg.get_variable(config[CONF_TARGET_SENSOR])
@@ -136,6 +142,16 @@ async def to_code(config):
     cg.add(var.set_kd(params[CONF_KD]))
     cg.add(var.set_starting_integral_term(params[CONF_STARTING_INTEGRAL_TERM]))
     cg.add(var.set_derivative_samples(params[CONF_DERIVATIVE_AVERAGING_SAMPLES]))
+    if CONF_KP_NUM in params:
+        num = await cg.get_variable(params[CONF_KP_NUM])
+        cg.add(var.set_kp_number(num))
+    if CONF_KI_NUM in params:
+        num = await cg.get_variable(params[CONF_KI_NUM])
+        cg.add(var.set_ki_number(num))
+    if CONF_KD_NUM in params:
+        num = await cg.get_variable(params[CONF_KD_NUM])
+        cg.add(var.set_kd_number(num))
+
 
     cg.add(var.set_output_samples(params[CONF_OUTPUT_AVERAGING_SAMPLES]))
 

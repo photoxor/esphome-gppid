@@ -9,7 +9,7 @@ static const char *const TAG = "pid";
 
 void PIDComponent::setup() {
     this->input_sensor_->add_on_state_callback([this](float state) {
-        ESP_LOGD(TAG, "sensor callback - got value %f", state);
+        ESP_LOGD(TAG, "input sensor callback - got value %f", state);
         this->update_pid_(state);
     });
     if (this->target_sensor_ != nullptr) {
@@ -21,10 +21,29 @@ void PIDComponent::setup() {
 #ifdef USE_NUMBER
     if (this->target_number_ != nullptr) {
         this->target_number_->add_on_state_callback([this](float state) {
-            ESP_LOGD(TAG, "number callback - submitting value %f", state);
-            this->target_value_ = state;
+            ESP_LOGD(TAG, "target number callback - submitting value %f", state);
+            if (std::isfinite(state)) this->target_value_ = state;
         });
     }
+    if (this->kp_number_ != nullptr) {
+        this->kp_number_->add_on_state_callback([this](float state) {
+            ESP_LOGD(TAG, "kp callback - submitting value %f", state);
+            if (std::isfinite(state)) this->set_kp(state);
+        });
+    }
+    if (this->ki_number_ != nullptr) {
+        this->ki_number_->add_on_state_callback([this](float state) {
+            ESP_LOGD(TAG, "ki callback - submitting value %f", state);
+            if (std::isfinite(state)) this->set_ki(state);
+        });
+    }
+    if (this->kd_number_ != nullptr) {
+        this->kd_number_->add_on_state_callback([this](float state) {
+            ESP_LOGD(TAG, "kd callback - submitting value %f", state);
+            if (std::isfinite(state)) this->set_kd(state);
+        });
+    }
+
 #endif
 }
 
@@ -49,21 +68,24 @@ void PIDComponent::dump_config() {
     }
 }
 
-void PIDComponent::write_output_(float value) {
-#ifdef USE_OUTPUT
-    ESP_LOGD(TAG, "write output value %f, clamped to %f..%f", value, output_min_, output_max_);
-    auto tmp = clamp(value, this->output_min_, this->output_max_);
-    this->output_value_ = tmp;
-    this->output_->set_level(tmp);
-#endif
-
-    this->pid_computed_callback_.call();
-}
-
 void PIDComponent::update_pid_(float current_value) {
-    ESP_LOGD(TAG, "update_pid");
-    float value = this->controller_.update(this->target_value_, current_value);
-    this->write_output_(value);
+    if (std::isfinite(current_value) && std::isfinite(this->target_value_)) {
+        float value = this->controller_.update(this->target_value_, current_value);
+        ESP_LOGD(TAG, "update_pid: %f -> %f: %f", current_value, this->target_value_, value);
+        ESP_LOGD(TAG, "write output value %f, clamped to %f..%f", value, output_min_, output_max_);
+        auto tmp = clamp(value, this->output_min_, this->output_max_);
+        this->output_value_ = tmp;
+        this->pid_computed_callback_.call();
+#ifdef USE_OUTPUT
+        ESP_LOGD(TAG, "write output: tmp: %f", tmp);
+        if (this->output_ != nullptr) {
+            this->output_->set_level(tmp);
+        }
+#endif
+    }
+    else {
+        ESP_LOGD(TAG, "nan");
+    }
 }
 
 void PIDComponent::reset_integral_term() {

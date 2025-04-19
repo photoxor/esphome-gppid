@@ -9,20 +9,20 @@ static const char *const TAG = "pid";
 
 void PIDComponent::setup() {
     this->value_sensor_->add_on_state_callback([this](float state) {
-        ESP_LOGD(TAG, "sensor callback");
+        ESP_LOGD(TAG, "sensor callback - got value %f", state);
         this->current_value_ = state;
         this->update_pid_();
     });
     if (this->target_sensor_ != nullptr) {
         this->target_sensor_->add_on_state_callback([this](float state) {
-            ESP_LOGD(TAG, "target callback");
+            ESP_LOGD(TAG, "target sensor callback - submitting value %f", state);
             this->target_value_ = state;
         });
     }
 #ifdef USE_NUMBER
     if (this->target_number_ != nullptr) {
         this->target_number_->add_on_state_callback([this](float state) {
-            ESP_LOGD(TAG, "number callback");
+            ESP_LOGD(TAG, "number callback - submitting value %f", state);
             this->target_value_ = state;
         });
     }
@@ -53,8 +53,10 @@ void PIDComponent::dump_config() {
 
 void PIDComponent::write_output_(float value) {
 #ifdef USE_OUTPUT
-    this->output_value_ = clamp(value, this->output_min_, this->output_max_);
-    this->output_->set_level(value);
+    ESP_LOGD(TAG, "write output value %f, clamped to %f..%f", value, output_min_, output_max_);
+    auto tmp = clamp(value, this->output_min_, this->output_max_);
+    this->output_value_ = tmp;
+    this->output_->set_level(tmp);
 #endif
 
     this->pid_computed_callback_.call();

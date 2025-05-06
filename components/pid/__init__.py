@@ -72,7 +72,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_TARGET_SENSOR): cv.use_id(sensor.Sensor),
             cv.Optional(CONF_TARGET_NUMBER): cv.use_id(number.Number),
             cv.Optional(CONF_HUMIDITY_SENSOR): cv.use_id(sensor.Sensor),
-            cv.Required(CONF_OUTPUT_PARAMETERS): cv.Schema(
+            cv.Optional(CONF_OUTPUT_PARAMETERS): cv.Schema(
                 {
                     cv.Required(cv.GenerateID()): cv.use_id(output.FloatOutput),
                     cv.Required(CONF_OUTPUT_MIN): cv.float_,

@@ -56,7 +56,7 @@ void PIDComponent::setup() {
 }
 
 void PIDComponent::dump_config() {
-    ESP_LOGCONFIG(TAG, "PID Controller", this);
+    ESP_LOGCONFIG(TAG, "PID Controller (HR)", this);
     ESP_LOGCONFIG(TAG, "  Control Parameters:");
     ESP_LOGCONFIG(TAG, "    kp: %.5f, ki: %.5f, kd: %.5f, output samples: %d",
                   controller_.kp_, controller_.ki_, controller_.kd_,

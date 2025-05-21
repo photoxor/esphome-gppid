@@ -49,7 +49,7 @@ void PIDComponent::setup() {
             if (std::isfinite(state)) this->set_kd(state);
         });
         // retrieve current inital value
-        this->set_kdthis->kd_number_->state);
+        this->set_kd(this->kd_number_->state);
     }
 
 #endif

@@ -24,24 +24,32 @@ void PIDComponent::setup() {
             ESP_LOGD(TAG, "target number callback - submitting value %f", state);
             if (std::isfinite(state)) this->target_value_ = state;
         });
+        // retrieve current inital value
+        this->target_value_ = this->target_number_->state;
     }
     if (this->kp_number_ != nullptr) {
         this->kp_number_->add_on_state_callback([this](float state) {
             ESP_LOGD(TAG, "kp callback - submitting value %f", state);
             if (std::isfinite(state)) this->set_kp(state);
         });
+        // retrieve current inital value
+        this->set_kp(this->kp_number_->state);
     }
     if (this->ki_number_ != nullptr) {
         this->ki_number_->add_on_state_callback([this](float state) {
             ESP_LOGD(TAG, "ki callback - submitting value %f", state);
             if (std::isfinite(state)) this->set_ki(state);
         });
+        // retrieve current inital value
+        this->set_ki(this->ki_number_->state);
     }
     if (this->kd_number_ != nullptr) {
         this->kd_number_->add_on_state_callback([this](float state) {
             ESP_LOGD(TAG, "kd callback - submitting value %f", state);
             if (std::isfinite(state)) this->set_kd(state);
         });
+        // retrieve current inital value
+        this->set_kdthis->kd_number_->state);
     }
 
 #endif

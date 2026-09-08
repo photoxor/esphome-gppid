@@ -111,7 +111,7 @@ float PIDController::weighted_average_(std::deque<float> &list, float new_value,
   float sum = 0;
   for (auto &elem : list)
     sum += elem;
-  return sum / list.size();
+  return sum / (float)list.size();
 }
 
 float PIDController::calculate_relative_time_() {

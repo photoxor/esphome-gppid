@@ -61,7 +61,11 @@ void PIDController::calculate_integral_term_() {
 
   if (in_deadband()) {
     // shallow the integral when in the deadband
-    accumulated_integral_ += new_integral * ki_multiplier_;
+    if (ki_multiplier_ <= 0.0001) {
+      accumulated_integral_ = new_integral * ki_multiplier_;
+    } else {
+      accumulated_integral_ += new_integral * ki_multiplier_;
+    }
   } else {
     accumulated_integral_ += new_integral;
   }

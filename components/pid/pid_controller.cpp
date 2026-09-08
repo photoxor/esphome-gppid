@@ -23,7 +23,9 @@ float PIDController::update(float setpoint, float process_value) {
 
   // smooth/sample the output
   int samples = in_deadband() ? deadband_output_samples_ : output_samples_;
-  return weighted_average_(output_list_, output, samples);
+  float wa = weighted_average_(output_list_, output, samples);
+  ESP_LOGD("pid", "update: output=%f, wa=%f, samples=%d", output, wa, samples);
+  return wa;
 }
 
 bool PIDController::in_deadband() {

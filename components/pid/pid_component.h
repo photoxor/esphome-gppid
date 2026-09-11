@@ -112,7 +112,7 @@ public:
 
 template<typename... Ts> class PIDAutotuneAction final : public Action<Ts...> {
  public:
-  PIDAutotuneAction(PIDClimate *parent) : parent_(parent) {}
+  PIDAutotuneAction(PIDComponent *parent) : parent_(parent) {}
 
   void set_noiseband(float noiseband) { noiseband_ = noiseband; }
   void set_positive_output(float positive_output) { positive_output_ = positive_output; }
@@ -130,7 +130,7 @@ template<typename... Ts> class PIDAutotuneAction final : public Action<Ts...> {
   float noiseband_;
   float positive_output_;
   float negative_output_;
-  PIDClimate *parent_;
+  PIDComponent *parent_;
 };
 
 template<typename... Ts> class PIDResetIntegralTermAction : public Action<Ts...> {

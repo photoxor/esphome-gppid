@@ -108,6 +108,9 @@ public:
   float output_value_{0.};
   float target_value_{NAN};
   std::unique_ptr<PIDAutotuner> autotuner_;
+
+  const StringRef &get_name() const { return this->name_; }
+  StringRef name_ = StringRef("PID");
 };
 
 template<typename... Ts> class PIDAutotuneAction final : public Action<Ts...> {

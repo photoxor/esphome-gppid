@@ -174,23 +174,23 @@ async def to_code(config):
             )
         )
 
-# @automation.register_action(
-#     "pid.autotune",
-#     PIDAutotuneAction,
-#     automation.maybe_simple_id(
-#         {
-#             cv.Required(CONF_ID): cv.use_id(PIDComponent),
-#             cv.Optional(CONF_NOISEBAND, default=0.25): cv.float_,
-#             cv.Optional(
-#                 CONF_POSITIVE_OUTPUT, default=1.0
-#             ): cv.possibly_negative_percentage,
-#             cv.Optional(
-#                 CONF_NEGATIVE_OUTPUT, default=-1.0
-#             ): cv.possibly_negative_percentage,
-#         }
-#     ),
-#     synchronous=True,
-# )
+@automation.register_action(
+    "pid.autotune",
+    PIDAutotuneAction,
+    automation.maybe_simple_id(
+        {
+            cv.Required(CONF_ID): cv.use_id(PIDComponent),
+            # cv.Optional(CONF_NOISEBAND, default=0.25): cv.float_,
+            # cv.Optional(
+            #     CONF_POSITIVE_OUTPUT, default=1.0
+            # ): cv.possibly_negative_percentage,
+            # cv.Optional(
+            #     CONF_NEGATIVE_OUTPUT, default=-1.0
+            # ): cv.possibly_negative_percentage,
+        }
+    ),
+    synchronous=True,
+)
 
 # @automation.register_action(
 #     "pid.reset_integral_term",

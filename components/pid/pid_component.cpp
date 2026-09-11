@@ -87,7 +87,7 @@ void PIDComponent::update_pid_(float current_value) {
 
         // Check autotuner
         if (this->autotuner_ != nullptr && !this->autotuner_->is_finished()) {
-          auto res = this->autotuner_->update(this->target_value, current_value);
+          auto res = this->autotuner_->update(this->target_value_, current_value);
           if (res.result_params.has_value()) {
             this->controller_.kp_ = res.result_params->kp;
             this->controller_.ki_ = res.result_params->ki;

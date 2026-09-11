@@ -179,7 +179,7 @@ async def to_code(config):
     PIDAutotuneAction,
     automation.maybe_simple_id(
         {
-            cv.Required(CONF_ID): cv.use_id(PIDClimate),
+            cv.Required(CONF_ID): cv.use_id(PIDComponent),
             cv.Optional(CONF_NOISEBAND, default=0.25): cv.float_,
             cv.Optional(
                 CONF_POSITIVE_OUTPUT, default=1.0

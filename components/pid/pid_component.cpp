@@ -74,6 +74,9 @@ void PIDComponent::dump_config() {
             controller_.kp_multiplier_, controller_.ki_multiplier_,
             controller_.kd_multiplier_, controller_.deadband_output_samples_);
     }
+  if (this->autotuner_ != nullptr) {
+    this->autotuner_->dump_config();
+  }
 }
 
 void PIDComponent::update_pid_(float current_value) {
@@ -81,6 +84,20 @@ void PIDComponent::update_pid_(float current_value) {
         float value = this->controller_.update(this->target_value_, current_value);
         ESP_LOGD(TAG, "update_pid: %f -> %f: %f", current_value, this->target_value_, value);
         ESP_LOGD(TAG, "write output value %f, clamped to %f..%f", value, output_min_, output_max_);
+
+        // Check autotuner
+        if (this->autotuner_ != nullptr && !this->autotuner_->is_finished()) {
+          auto res = this->autotuner_->update(this->target_temperature, this->current_temperature);
+          if (res.result_params.has_value()) {
+            this->controller_.kp_ = res.result_params->kp;
+            this->controller_.ki_ = res.result_params->ki;
+            this->controller_.kd_ = res.result_params->kd;
+            // keep autotuner instance so that subsequent dump_configs will print the long result message.
+          } else {
+            value = res.output;
+          }
+        }
+        
         auto tmp = clamp(value, this->output_min_, this->output_max_);
         this->output_value_ = tmp;
         this->pid_computed_callback_.call();
@@ -98,6 +115,31 @@ void PIDComponent::update_pid_(float current_value) {
 
 void PIDComponent::reset_integral_term() {
     this->controller_.reset_accumulated_integral();
+}
+
+void PIDComponent::start_autotune(std::unique_ptr<PIDAutotuner> &&autotune) {
+  this->autotuner_ = std::move(autotune);
+  float min_value = this->supports_cool_() ? -1.0f : 0.0f;
+  float max_value = this->supports_heat_() ? 1.0f : 0.0f;
+  this->autotuner_->config(min_value, max_value);
+  this->autotuner_->set_autotuner_id(this->get_name());
+
+  ESP_LOGI(TAG,
+           "%s: Autotune has started. This can take a long time depending on the "
+           "responsiveness of your system. Your system "
+           "output will be altered to deliberately oscillate above and below the setpoint multiple times. "
+           "Until your sensor provides a reading, the autotuner may display \'nan\'",
+           this->get_name().c_str());
+
+  this->set_interval("autotune-progress", 10000, [this]() {
+    if (this->autotuner_ != nullptr && !this->autotuner_->is_finished())
+      this->autotuner_->dump_config();
+  });
+
+  if (mode != climate::CLIMATE_MODE_HEAT_COOL) {
+    ESP_LOGW(TAG, "%s: !!! For PID autotuner you need to set AUTO (also called heat/cool) mode!",
+             this->get_name().c_str());
+  }
 }
 
 }  // namespace pid

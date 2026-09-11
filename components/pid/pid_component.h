@@ -13,6 +13,7 @@
 #endif
 
 #include "pid_controller.h"
+#include "pid_autotuner.h"
 
 namespace esphome {
 namespace pid {
@@ -84,6 +85,7 @@ public:
     pid_computed_callback_.add(std::move(callback));
   }
 
+  void start_autotune(std::unique_ptr<PIDAutotuner> &&autotune);
   void reset_integral_term();
   void set_output_range(float output_min, float output_max) { output_min_= output_min; output_max_ = output_max; }
 
@@ -105,8 +107,31 @@ public:
 
   float output_value_{0.};
   float target_value_{NAN};
+  std::unique_ptr<PIDAutotuner> autotuner_;
 };
 
+template<typename... Ts> class PIDAutotuneAction final : public Action<Ts...> {
+ public:
+  PIDAutotuneAction(PIDClimate *parent) : parent_(parent) {}
+
+  void set_noiseband(float noiseband) { noiseband_ = noiseband; }
+  void set_positive_output(float positive_output) { positive_output_ = positive_output; }
+  void set_negative_output(float negative_output) { negative_output_ = negative_output; }
+
+  void play(const Ts &...x) {
+    auto tuner = make_unique<PIDAutotuner>();
+    tuner->set_noiseband(this->noiseband_);
+    tuner->set_output_negative(this->negative_output_);
+    tuner->set_output_positive(this->positive_output_);
+    this->parent_->start_autotune(std::move(tuner));
+  }
+
+ protected:
+  float noiseband_;
+  float positive_output_;
+  float negative_output_;
+  PIDClimate *parent_;
+};
 
 template<typename... Ts> class PIDResetIntegralTermAction : public Action<Ts...> {
  public:

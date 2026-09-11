@@ -87,7 +87,7 @@ void PIDComponent::update_pid_(float current_value) {
 
         // Check autotuner
         if (this->autotuner_ != nullptr && !this->autotuner_->is_finished()) {
-          auto res = this->autotuner_->update(this->target_temperature, this->current_temperature);
+          auto res = this->autotuner_->update(this->target_value, current_value);
           if (res.result_params.has_value()) {
             this->controller_.kp_ = res.result_params->kp;
             this->controller_.ki_ = res.result_params->ki;
@@ -119,8 +119,8 @@ void PIDComponent::reset_integral_term() {
 
 void PIDComponent::start_autotune(std::unique_ptr<PIDAutotuner> &&autotune) {
   this->autotuner_ = std::move(autotune);
-  float min_value = this->supports_cool_() ? -1.0f : 0.0f;
-  float max_value = this->supports_heat_() ? 1.0f : 0.0f;
+  float min_value = 0.0f;
+  float max_value = 0.0f;
   this->autotuner_->config(min_value, max_value);
   this->autotuner_->set_autotuner_id(this->get_name());
 
@@ -135,11 +135,6 @@ void PIDComponent::start_autotune(std::unique_ptr<PIDAutotuner> &&autotune) {
     if (this->autotuner_ != nullptr && !this->autotuner_->is_finished())
       this->autotuner_->dump_config();
   });
-
-  if (mode != climate::CLIMATE_MODE_HEAT_COOL) {
-    ESP_LOGW(TAG, "%s: !!! For PID autotuner you need to set AUTO (also called heat/cool) mode!",
-             this->get_name().c_str());
-  }
 }
 
 }  // namespace pid

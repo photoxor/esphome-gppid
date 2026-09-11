@@ -110,28 +110,28 @@ public:
   std::unique_ptr<PIDAutotuner> autotuner_;
 };
 
-template<typename... Ts> class PIDAutotuneAction final : public Action<Ts...> {
- public:
-  PIDAutotuneAction(PIDComponent *parent) : parent_(parent) {}
+// template<typename... Ts> class PIDAutotuneAction final : public Action<Ts...> {
+//  public:
+//   PIDAutotuneAction(PIDComponent *parent) : parent_(parent) {}
 
-  void set_noiseband(float noiseband) { noiseband_ = noiseband; }
-  void set_positive_output(float positive_output) { positive_output_ = positive_output; }
-  void set_negative_output(float negative_output) { negative_output_ = negative_output; }
+//   void set_noiseband(float noiseband) { noiseband_ = noiseband; }
+//   void set_positive_output(float positive_output) { positive_output_ = positive_output; }
+//   void set_negative_output(float negative_output) { negative_output_ = negative_output; }
 
-  void play(const Ts &...x) {
-    auto tuner = make_unique<PIDAutotuner>();
-    tuner->set_noiseband(this->noiseband_);
-    tuner->set_output_negative(this->negative_output_);
-    tuner->set_output_positive(this->positive_output_);
-    this->parent_->start_autotune(std::move(tuner));
-  }
+//   void play(const Ts &...x) {
+//     auto tuner = make_unique<PIDAutotuner>();
+//     tuner->set_noiseband(this->noiseband_);
+//     tuner->set_output_negative(this->negative_output_);
+//     tuner->set_output_positive(this->positive_output_);
+//     this->parent_->start_autotune(std::move(tuner));
+//   }
 
- protected:
-  float noiseband_;
-  float positive_output_;
-  float negative_output_;
-  PIDComponent *parent_;
-};
+//  protected:
+//   float noiseband_;
+//   float positive_output_;
+//   float negative_output_;
+//   PIDComponent *parent_;
+// };
 
 template<typename... Ts> class PIDResetIntegralTermAction : public Action<Ts...> {
  public:

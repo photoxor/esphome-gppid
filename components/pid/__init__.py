@@ -3,6 +3,9 @@ import esphome.config_validation as cv
 from esphome import automation
 from esphome.components import sensor, output, number
 from esphome.const import CONF_HUMIDITY_SENSOR, CONF_ID, CONF_OUTPUT
+from esphome.core import ID
+from esphome.cpp_generator import MockObj, TemplateArgsType
+from esphome.types import ConfigType
 
 CODEOWNERS = ["@OttoWinter", "@hsteinhaus"]
 MULTI_CONF = True
@@ -191,7 +194,19 @@ async def to_code(config):
     ),
     synchronous=True,
 )
-
+async def esp8266_set_frequency_to_code(
+    config: ConfigType,
+    action_id: ID,
+    template_arg: cg.TemplateArguments,
+    args: TemplateArgsType,
+) -> MockObj:
+    paren = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, paren)
+    cg.add(var.set_noiseband(config[CONF_NOISEBAND]))
+    cg.add(var.set_positive_output(config[CONF_POSITIVE_OUTPUT]))
+    cg.add(var.set_negative_output(config[CONF_NEGATIVE_OUTPUT]))
+    return var
+    
 # @automation.register_action(
 #     "pid.reset_integral_term",
 #     PIDResetIntegralTermAction,
